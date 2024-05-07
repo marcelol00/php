@@ -1,23 +1,31 @@
 <?php
 
-session_start();
+require_once("User.php");
 
-if (isset($_POST['login'])) { 
+$user = new User();
+$authenticated = $user->authenticated();
+
+if ($authenticated == false && $_POST) { 
 
     // Connect to the database 
     $mysqli = new mysqli("localhost", "mysql", "mysql", "login_system"); 
 
     // Check for errors 
-    if ($mysqli->connect_error) { die("Connection failed: " . $mysqli->connect_error); } 
+    if ($mysqli->connect_error) {
+        die("Connection failed: " . $mysqli->connect_error);
+    } 
 
     // Prepare and bind the SQL statement 
-    $stmt = $mysqli->prepare("SELECT id, password FROM users WHERE username = ?"); $stmt->bind_param("s", $username); 
+    $stmt = $mysqli->prepare("SELECT id, password FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username); 
 
     // Get the form data 
-    $username = $_POST['username']; $password = $_POST['password']; 
+    $username = $_POST['username'];
+    $password = $_POST['password']; 
 
     // Execute the SQL statement 
-    $stmt->execute(); $stmt->store_result(); 
+    $stmt->execute();
+    $stmt->store_result(); 
 
     // Check if the user exists 
     if ($stmt->num_rows > 0) { 
@@ -31,8 +39,12 @@ if (isset($_POST['login'])) {
         // Verify the password 
         if (password_verify($password, $hashed_password)) { 
 
-            // Set the session variables 
-            $_SESSION['loggedin'] = true; $_SESSION['id'] = $id; $_SESSION['username'] = $username; 
+            // // Set the session variables 
+            // $_SESSION['loggedin'] = true; $_SESSION['id'] = $id; $_SESSION['username'] = $username; 
+
+            $cookie_name = "login_cookie";
+            $cookie_value = "Login";
+            setcookie($cookie_name, $cookie_value, time() + (86400 * 30),"/");
 
             // Redirect to the user's dashboard 
             header("Location: dashboard.php");
@@ -41,12 +53,14 @@ if (isset($_POST['login'])) {
             echo "Incorrect password!"; 
         } 
     }
-    else {
-        echo "User not found!"; 
-    } 
+    // else {
+    //     header("Location: login.php");
+    // } 
 
     // Close the connection 
     $stmt->close(); $mysqli->close();
+} elseif ($authenticated == true) {
+    header("Location: dashboard.php");
 }
 
 ?>

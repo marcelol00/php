@@ -1,12 +1,25 @@
 <?php
 
-$cookie_name = "login_cookie";
-$cookie_value = "Login";
+require_once("User.php");
 
-if (!isset($_COOKIE[$cookie_name])) {
-    echo "Não logado!";
-} else {
+$user = new User();
+$authenticated = $user->authenticated();
+
+echo $authenticated . "<br>";
+
+if ($authenticated) {
     echo "Logado";
+} else {
+    header("Location: login.php");
+}
+
+if (isset($_POST['Logout'])) {
+    $user->logout();
 }
 
 ?>
+
+
+<form action="dashboard.php" method="post">
+   <input name="Logout" type="submit" value="Logout" />
+</form>
